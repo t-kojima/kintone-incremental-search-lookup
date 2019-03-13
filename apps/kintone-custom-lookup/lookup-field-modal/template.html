@@ -7,27 +7,11 @@
             <div class="gaia-mobile-app-lookuplist">
               <ul class="gaia-mobile-app-lookuplist-records">
                 <li v-for="(record, index) in filterdRecords" class="gaia-mobile-app-lookuplist-record">
-                  <div class="gaia-mobile-app-lookuplist-inner" @click="onClickItem(index)">
+                  <div class="gaia-mobile-app-lookuplist-inner" @click="onClickItem(record)">
                     <ul class="gaia-mobile-app-lookuplist-fields">
-                      <li class="gaia-mobile-app-lookuplist-field">
+                      <li v-for="label in labelItems(record)" class="gaia-mobile-app-lookuplist-field">
                         <div class="recordlist-cell-gaia recordlist-single_line_text-gaia">
-                          <div class="line-cell-gaia">
-                            <span>{{}}</span>
-                          </div>
-                        </div>
-                      </li>
-                      <li class="gaia-mobile-app-lookuplist-field">
-                        <div class="recordlist-cell-gaia recordlist-single_line_text-gaia">
-                          <div class="line-cell-gaia">
-                            <span>{{}}</span>
-                          </div>
-                        </div>
-                      </li>
-                      <li class="gaia-mobile-app-lookuplist-field">
-                        <div class="recordlist-cell-gaia recordlist-single_line_text-gaia">
-                          <div class="line-cell-gaia">
-                            <span>{{}}</span>
-                          </div>
+                          <div class="line-cell-gaia"><span>{{ label }}</span></div>
                         </div>
                       </li>
                     </ul>
@@ -45,19 +29,9 @@
         <table class="navigation-header-bar">
           <tbody>
             <tr>
-              <td class="navigation-header-left">
-                <div class="gaia-mobile-ui-barbutton button-disabled-gaia">
-                  <div class="gaia-mobile-ui-barbutton-contents button-normal-style">
-                    <div class="button-bg"></div>
-                    <div class="button-label">
-                      <span class="icon"> <i class="fas fa-search"></i> </span>
-                    </div>
-                  </div>
-                </div>
-              </td>
               <td class="navigation-header-center">
-                <div class="navigation-header-center-title">
-                  <input type="text" class="forms-text-gaia" style="padding: 4px;" v-model="input" />
+                <div class="navigation-header-search">
+                  <input type="text" class="forms-text-gaia" v-model="input" />
                 </div>
               </td>
               <td class="navigation-header-right">

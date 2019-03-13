@@ -1,7 +1,13 @@
 import Vue from 'vue'
 import template from './template.html'
+import style from './style.scss'
 
-export function createLookupModalViewModel(self, id, field, records) {
+style.use()
+
+// TODO デフォルトのフィルタ
+// TODO order by
+
+export function createLookupModalViewModel(self, id, lookup, field, records, callback) {
   document.getElementById('main').insertAdjacentHTML('beforeend', `<div id="${id}"></div>`)
   return new Vue({
     el: `#${id}`,
@@ -11,9 +17,8 @@ export function createLookupModalViewModel(self, id, field, records) {
       active: false,
     },
     methods: {
-      onClickItem(index) {
-        const record = this.filterdRecords[index]
-        // self.callback(record)
+      onClickItem(record) {
+        callback(record)
         this.active = false
       },
       onSearch(value) {
@@ -22,6 +27,11 @@ export function createLookupModalViewModel(self, id, field, records) {
       },
       close() {
         this.active = false
+      },
+      labelItems(record) {
+        const targetFieldIds = [lookup.keyMapping.targetFieldId, ...lookup.listFields]
+        const targetFields = lookup.targetApp.schema.table.fieldList;
+        return targetFieldIds.map(id => record[targetFields[id].var].value)
       },
     },
     computed: {
@@ -32,12 +42,7 @@ export function createLookupModalViewModel(self, id, field, records) {
           .filter(_ => _)
         return words.length
           ? this.records.filter(_ => {
-              //   const text = `
-              //   ${_['品名1'].value}
-              //   ${_['品名2'].value}
-              //   ${_['品名3'].value}
-              // `
-              const text = ''
+              const text = this.labelItems(_).join(' ')
               return words.every(word => text.includes(word))
             })
           : this.records
