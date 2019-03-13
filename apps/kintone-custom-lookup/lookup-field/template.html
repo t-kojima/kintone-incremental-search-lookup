@@ -3,11 +3,11 @@
     <h3 class="control-label-gaia">{{ label }}</h3>
     <div class="control-value-gaia">
       <div class="forms-lookup-gaia">
-        <input type="text" class="forms-lookup-input-gaia" />
+        <input type="text" class="forms-lookup-input-gaia" v-model="input" />
         <table class="forms-lookup-buttons">
           <tbody>
             <tr>
-              <td><button class="forms-lookup-lookup-gaia" @click="onSelect">取得</button></td>
+              <td><button class="forms-lookup-lookup-gaia" @click="openModal">取得</button></td>
               <td><button class="forms-lookup-clear-gaia" @click="onClear">クリア</button></td>
             </tr>
           </tbody>

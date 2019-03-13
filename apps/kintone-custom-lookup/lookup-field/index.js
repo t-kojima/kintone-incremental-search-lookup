@@ -5,7 +5,8 @@ import { createLookupModalViewModel } from '../lookup-field-modal'
 
 style.use()
 
-const callback = () => {}
+// TODO 他フィールドへの反映（callback
+// TODO クリア
 
 export default {
   name: 'LookupField',
@@ -20,22 +21,29 @@ export default {
     id: String,
     lookup: Object,
     field: Object,
+    callback: Function,
   },
   created() {
     kintoneUtility.rest
       .getAllRecordsByQuery({ app: this.targetAppId, query: 'order by $id asc' })
       .then(({ records }) => {
-        this.modal = createLookupModalViewModel(this, `${this.id}-modal`, this.lookup, this.field, records, callback)
+        this.modal = createLookupModalViewModel(this, `${this.id}-modal`, this.lookup, this.field, records, this.onSelect)
       })
       .then(() => {
         this.disabled = false
       })
   },
   methods: {
-    onSelect() {
+    openModal() {
       this.modal.onSearch(this.input)
     },
     onClear() {},
+    onSelect(record) {
+      const { keyMapping: { targetFieldId } } = this.lookup 
+      const targetField = this.lookup.targetApp.schema.table.fieldList[targetFieldId];
+      this.input = record[targetField.var].value
+      // this.callback(record)
+    }
   },
   computed: {
     label() {
