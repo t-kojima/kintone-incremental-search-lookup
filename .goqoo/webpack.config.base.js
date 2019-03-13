@@ -97,6 +97,7 @@ const config = {
     port: 59000,
     headers: { 'Access-Control-Allow-Origin': '*' },
     progress: true,
+    disableHostCheck: true,
   },
 }
 
