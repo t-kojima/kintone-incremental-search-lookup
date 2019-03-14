@@ -2,7 +2,10 @@ import kintoneUtility from 'kintone-utility'
 import template from './template.html'
 import { createLookupModalViewModel } from '../lookup-field-modal'
 
-// TODO query order by
+// TODO フィールド名を表示しない
+// TODO 必須項目にする
+// TODO 絞り込みの初期設定
+// TODO 絞り込みの初期設定（カスタム
 
 export default {
   name: 'LookupField',
@@ -21,8 +24,13 @@ export default {
     callback: Function,
   },
   created() {
+    const {
+      query: { orders },
+    } = this.lookup
+    const optionalOrder = orders.map(_ => `${this.targetFieldList[_.name.slice(1)].var} ${_.op.toLowerCase()}`).join(',')
+    const order = optionalOrder ? `order by ${optionalOrder}` : 'order by $id asc'
     kintoneUtility.rest
-      .getAllRecordsByQuery({ app: this.targetAppId, query: 'order by $id asc' })
+      .getAllRecordsByQuery({ app: this.targetAppId, query: order })
       .then(({ records }) => {
         this.modal = createLookupModalViewModel(
           this,
@@ -51,14 +59,9 @@ export default {
     onSelect(record) {
       const {
         keyMapping: { fieldId, targetFieldId },
-        targetApp: {
-          schema: {
-            table: { fieldList },
-          },
-        },
       } = this.lookup
       // カスタムルックアップへのフィールドコピー
-      const targetField = fieldList[targetFieldId]
+      const targetField = this.targetFieldList[targetFieldId]
       this.input = record[targetField.var].value
 
       // オリジナルルックアップへのフィールドコピー
@@ -76,13 +79,13 @@ export default {
       const {
         keyMapping: { fieldId },
       } = this.lookup
-      const {
-        table: { fieldList },
-      } = this.schema
-      return fieldList[fieldId].label
+      return this.schema.table.fieldList[fieldId].label
     },
     targetAppId() {
       return this.lookup.targetApp.id
+    },
+    targetFieldList() {
+      return this.lookup.targetApp.schema.table.fieldList
     },
   },
   template,
