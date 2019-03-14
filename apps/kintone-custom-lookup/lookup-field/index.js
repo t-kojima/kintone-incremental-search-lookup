@@ -93,20 +93,31 @@ export default {
       return this.lookup.targetApp.schema.table.fieldList
     },
     query() {
-      // MEMO: type: 'IN' はサポートしない
-      const isStringValue = _ => _.type === 'COMPARISON'
+      // MEMO: type: 'STATUS' はサポートしない
+      const isStatus = _ => this.targetFieldList[_.key.slice(1)].type === 'STATUS'
+      const getValue = _ => {
+        if (_.type === 'COMPARISON') {
+          return `"${_.value.value}"`
+        } else {
+          const options = this.targetFieldList[_.key.slice(1)].properties.options
+          return `(${_.values
+            .map(_ => (_.value ? `"${options.find(option => option.id === _.value).label}"` : `""`))
+            .join(',')})`
+        }
+      }
       const {
         query: { orders, condition },
       } = this.lookup
       const conditions = condition
         ? condition.children
-            .filter(_ => isStringValue(_))
-            .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} "${_.value.value}"`)
+            .filter(_ => !isStatus(_))
+            .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} ${getValue(_)}`)
             .join(` ${condition.op.toLowerCase()} `)
         : ''
       const order = `order by ${orders
         .map(_ => `${this.targetFieldList[_.name.slice(1)].var} ${_.op.toLowerCase()}`)
         .join(',')}`
+      console.log(`${conditions} ${order}`.trim())
       return `${conditions} ${order}`.trim()
     },
   },
