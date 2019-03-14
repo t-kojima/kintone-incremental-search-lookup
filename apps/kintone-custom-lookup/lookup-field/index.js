@@ -1,12 +1,8 @@
 import kintoneUtility from 'kintone-utility'
 import template from './template.html'
-import style from '../../51-modern-default.min.css'
 import { createLookupModalViewModel } from '../lookup-field-modal'
 
-style.use()
-
 // TODO query order by
-// TODO クリア
 
 export default {
   name: 'LookupField',

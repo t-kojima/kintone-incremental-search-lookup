@@ -1,4 +1,4 @@
-# kintone-custom-lookup
-for mobile
+# kintone-incremental-search-lookup
 
-incremental search
+- kintone plugin for mobile
+- incremental search in lookup field
