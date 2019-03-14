@@ -4,8 +4,18 @@ import { createLookupModalViewModel } from '../lookup-field-modal'
 
 // TODO フィールド名を表示しない
 // TODO 必須項目にする
-// TODO 絞り込みの初期設定
 // TODO 絞り込みの初期設定（カスタム
+
+const operators = {
+  LIKE: 'like',
+  NOT_LIKE: 'not like',
+  EQ: '=',
+  NE: '!=',
+  LE: '<=',
+  GE: '>=',
+  IN: 'in',
+  NOT_IN: 'not in',
+}
 
 export default {
   name: 'LookupField',
@@ -24,13 +34,8 @@ export default {
     callback: Function,
   },
   created() {
-    const {
-      query: { orders },
-    } = this.lookup
-    const optionalOrder = orders.map(_ => `${this.targetFieldList[_.name.slice(1)].var} ${_.op.toLowerCase()}`).join(',')
-    const order = optionalOrder ? `order by ${optionalOrder}` : 'order by $id asc'
     kintoneUtility.rest
-      .getAllRecordsByQuery({ app: this.targetAppId, query: order })
+      .getAllRecordsByQuery({ app: this.targetAppId, query: this.query })
       .then(({ records }) => {
         this.modal = createLookupModalViewModel(
           this,
@@ -86,6 +91,23 @@ export default {
     },
     targetFieldList() {
       return this.lookup.targetApp.schema.table.fieldList
+    },
+    query() {
+      // MEMO: type: 'IN' はサポートしない
+      const isStringValue = _ => _.type === 'COMPARISON'
+      const {
+        query: { orders, condition },
+      } = this.lookup
+      const conditions = condition
+        ? condition.children
+            .filter(_ => isStringValue(_))
+            .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} "${_.value.value}"`)
+            .join(` ${condition.op.toLowerCase()} `)
+        : ''
+      const order = `order by ${orders
+        .map(_ => `${this.targetFieldList[_.name.slice(1)].var} ${_.op.toLowerCase()}`)
+        .join(',')}`
+      return `${conditions} ${order}`.trim()
     },
   },
   template,
