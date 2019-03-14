@@ -4,7 +4,6 @@ import { createLookupModalViewModel } from '../lookup-field-modal'
 
 // TODO フィールド名を表示しない
 // TODO 必須項目にする
-// TODO 絞り込みの初期設定（カスタム
 
 const operators = {
   LIKE: 'like',
@@ -52,6 +51,15 @@ export default {
   },
   methods: {
     openModal() {
+      const {
+        query: { condition },
+      } = this.lookup
+      const children = condition ? (condition.children ? condition.children : [condition]) : []
+      // 拡張フィルタをモーダルに設定
+      this.modal.extraFilter = children
+        .filter(_ => this.isExtraFilter(_))
+        .map(({ key, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value })
+
       this.modal.onSearch(this.input)
     },
     onClear() {
@@ -78,13 +86,19 @@ export default {
 
       this.callback(record)
     },
+    isExtraFilter({ value }) {
+      return Object.values(this.fieldList).find(_ => _.var === value.value)
+    },
   },
   computed: {
     label() {
       const {
         keyMapping: { fieldId },
       } = this.lookup
-      return this.schema.table.fieldList[fieldId].label
+      return this.fieldList[fieldId].label
+    },
+    fieldList() {
+      return this.schema.table.fieldList
     },
     targetAppId() {
       return this.lookup.targetApp.id
@@ -94,13 +108,13 @@ export default {
     },
     query() {
       // MEMO: type: 'STATUS' はサポートしない
-      const isStatus = _ => this.targetFieldList[_.key.slice(1)].type === 'STATUS'
-      const getValue = _ => {
-        if (_.type === 'COMPARISON') {
-          return `"${_.value.value}"`
+      const isStatus = ({ key }) => this.targetFieldList[key.slice(1)].type === 'STATUS'
+      const getValue = ({ key, type, value, values }) => {
+        if (type === 'COMPARISON') {
+          return `"${value.value}"`
         } else {
-          const options = this.targetFieldList[_.key.slice(1)].properties.options
-          return `(${_.values
+          const options = this.targetFieldList[key.slice(1)].properties.options
+          return `(${values
             .map(_ => (_.value ? `"${options.find(option => option.id === _.value).label}"` : `""`))
             .join(',')})`
         }
@@ -108,16 +122,14 @@ export default {
       const {
         query: { orders, condition },
       } = this.lookup
-      const conditions = condition
-        ? condition.children
-            .filter(_ => !isStatus(_))
-            .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} ${getValue(_)}`)
-            .join(` ${condition.op.toLowerCase()} `)
-        : ''
+      const children = condition ? (condition.children ? condition.children : [condition]) : []
+      const conditions = children
+        .filter(_ => !isStatus(_) && !this.isExtraFilter(_))
+        .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} ${getValue(_)}`)
+        .join(` ${condition && condition.op.toLowerCase()} `)
       const order = `order by ${orders
         .map(_ => `${this.targetFieldList[_.name.slice(1)].var} ${_.op.toLowerCase()}`)
         .join(',')}`
-      console.log(`${conditions} ${order}`.trim())
       return `${conditions} ${order}`.trim()
     },
   },

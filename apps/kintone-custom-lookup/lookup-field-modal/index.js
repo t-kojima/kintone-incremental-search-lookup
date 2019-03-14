@@ -15,6 +15,7 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
       records,
       input: '',
       active: false,
+      extraFilter: [],
     },
     methods: {
       onClickItem(record) {
@@ -30,23 +31,34 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
       },
       labelItems(record) {
         const targetFieldIds = [lookup.keyMapping.targetFieldId, ...lookup.listFields]
-        const targetFields = lookup.targetApp.schema.table.fieldList;
+        const targetFields = lookup.targetApp.schema.table.fieldList
         return targetFieldIds.map(id => record[targetFields[id].var].value)
       },
     },
     computed: {
       filterdRecords() {
-        const words = this.input
-          .replace(/　/g, ' ')
-          .split(' ')
-          .filter(_ => _)
-        return words.length
-          ? this.records.filter(_ => {
-              const text = this.labelItems(_).join(' ')
-              return words.every(word => text.includes(word))
-            })
-          : this.records
-      },
+        const filterFromInput = records => {
+          const words = this.input
+            .replace(/　/g, ' ')
+            .split(' ')
+            .filter(_ => _)
+          return words.length
+            ? records.filter(_ => {
+                const text = this.labelItems(_).join(' ')
+                return words.every(word => text.includes(word))
+              })
+            : records
+        }
+        const filterFromExtra = records => {
+          return this.extraFilter.length
+            ? records.filter(_ => {
+                const record = kintone.mobile.app.record.get().record
+                return this.extraFilter.every(extra => _[extra.target].value === record[extra.filter].value)
+              })
+            : records
+        }
+        return filterFromExtra(filterFromInput(this.records))
+      }
     },
     template,
   })
