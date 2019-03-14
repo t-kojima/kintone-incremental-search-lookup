@@ -5,7 +5,7 @@ import { createLookupModalViewModel } from '../lookup-field-modal'
 
 style.use()
 
-// TODO 他フィールドへの反映（callback
+// TODO query order by
 // TODO クリア
 
 export default {
@@ -20,14 +20,21 @@ export default {
   props: {
     id: String,
     lookup: Object,
-    field: Object,
+    schema: Object,
     callback: Function,
   },
   created() {
     kintoneUtility.rest
       .getAllRecordsByQuery({ app: this.targetAppId, query: 'order by $id asc' })
       .then(({ records }) => {
-        this.modal = createLookupModalViewModel(this, `${this.id}-modal`, this.lookup, this.field, records, this.onSelect)
+        this.modal = createLookupModalViewModel(
+          this,
+          `${this.id}-modal`,
+          this.lookup,
+          this.schema,
+          records,
+          this.onSelect
+        )
       })
       .then(() => {
         this.disabled = false
@@ -37,17 +44,42 @@ export default {
     openModal() {
       this.modal.onSearch(this.input)
     },
-    onClear() {},
+    onClear() {
+      // TODO: CLEAR
+    },
     onSelect(record) {
-      const { keyMapping: { targetFieldId } } = this.lookup 
-      const targetField = this.lookup.targetApp.schema.table.fieldList[targetFieldId];
+      const {
+        keyMapping: { fieldId, targetFieldId },
+        fieldMappings,
+        targetApp: {
+          schema: {
+            table: { fieldList },
+          },
+        },
+      } = this.lookup
+      // カスタムルックアップへのフィールドコピー
+      const targetField = fieldList[targetFieldId]
       this.input = record[targetField.var].value
-      // this.callback(record)
-    }
+
+      // オリジナルルックアップへのフィールドコピー
+      const _record = kintone.mobile.app.record.get()
+      const field = this.schema.table.fieldList[fieldId]
+      _record.record[field.var].value = record[targetField.var].value
+      _record.record[field.var].lookup = true
+      kintone.mobile.app.record.set(_record)
+
+      this.callback(record)
+    },
   },
   computed: {
     label() {
-      return this.field.label
+      const {
+        keyMapping: { fieldId },
+      } = this.lookup
+      const {
+        table: { fieldList },
+      } = this.schema
+      return fieldList[fieldId].label
     },
     targetAppId() {
       return this.lookup.targetApp.id

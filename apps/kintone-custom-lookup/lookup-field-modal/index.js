@@ -7,7 +7,7 @@ style.use()
 // TODO デフォルトのフィルタ
 // TODO order by
 
-export function createLookupModalViewModel(self, id, lookup, field, records, callback) {
+export function createLookupModalViewModel(self, id, lookup, schema, records, callback) {
   document.getElementById('main').insertAdjacentHTML('beforeend', `<div id="${id}"></div>`)
   return new Vue({
     el: `#${id}`,
