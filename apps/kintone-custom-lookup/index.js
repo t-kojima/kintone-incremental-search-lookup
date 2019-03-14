@@ -35,7 +35,7 @@ function createLookupViewModel(parent, lookup, schema) {
   parent.style.display = 'none'
   new Vue({
     el: `#${id}`,
-    data: { id, lookup, schema },
+    data: { id, parent, lookup, schema },
     components: { 'lookup-field': LookupField },
     methods: {
       onSelect(record) {
@@ -44,7 +44,7 @@ function createLookupViewModel(parent, lookup, schema) {
         // EventEmitter -> イベントのインスタンスをどこに置く？window？
       },
     },
-    template: `<lookup-field id="id" :lookup="lookup" :schema="schema" :callback="onSelect"></lookup-field>`,
+    template: `<lookup-field id="id" :parent="parent" :lookup="lookup" :schema="schema" :callback="onSelect"></lookup-field>`,
   })
 }
 

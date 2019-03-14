@@ -19,6 +19,7 @@ export default {
   },
   props: {
     id: String,
+    parent: HTMLDivElement,
     lookup: Object,
     schema: Object,
     callback: Function,
@@ -45,12 +46,15 @@ export default {
       this.modal.onSearch(this.input)
     },
     onClear() {
-      // TODO: CLEAR
+      this.input = ''
+      const [clear] = this.parent.getElementsByClassName('forms-lookup-clear-gaia')
+      clear.click()
+
+      this.callback()
     },
     onSelect(record) {
       const {
         keyMapping: { fieldId, targetFieldId },
-        fieldMappings,
         targetApp: {
           schema: {
             table: { fieldList },
