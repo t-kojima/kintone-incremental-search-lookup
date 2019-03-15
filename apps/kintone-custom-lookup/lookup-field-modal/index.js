@@ -4,9 +4,6 @@ import style from './style.scss'
 
 style.use()
 
-// TODO デフォルトのフィルタ
-// TODO order by
-
 export function createLookupModalViewModel(self, id, lookup, schema, records, callback) {
   document.getElementById('main').insertAdjacentHTML('beforeend', `<div id="${id}"></div>`)
   return new Vue({

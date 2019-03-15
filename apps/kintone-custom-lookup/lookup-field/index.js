@@ -2,9 +2,6 @@ import kintoneUtility from 'kintone-utility'
 import template from './template.html'
 import { createLookupModalViewModel } from '../lookup-field-modal'
 
-// TODO フィールド名を表示しない
-// TODO 必須項目にする
-
 const operators = {
   LIKE: 'like',
   NOT_LIKE: 'not like',
@@ -92,10 +89,19 @@ export default {
   },
   computed: {
     label() {
+      return this.field.label
+    },
+    required() {
+      return JSON.parse(this.field.properties.required)
+    },
+    noLabel() {
+      return JSON.parse(this.field.properties.noLabel)
+    },
+    field() {
       const {
         keyMapping: { fieldId },
       } = this.lookup
-      return this.fieldList[fieldId].label
+      return this.fieldList[fieldId]
     },
     fieldList() {
       return this.schema.table.fieldList

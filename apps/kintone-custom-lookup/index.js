@@ -1,7 +1,5 @@
 /* eslint-disable no-undef */
 import Vue from 'vue'
-import kintoneUtility from 'kintone-utility'
-import template from './template.html'
 import { createId } from '../utils'
 import LookupField from './lookup-field'
 
