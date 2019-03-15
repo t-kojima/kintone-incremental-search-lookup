@@ -5,6 +5,13 @@ import style from './style.scss'
 
 style.use()
 
+const comparison = {
+  LIKE: (target, filter) => filter ? target.includes(filter) : true,
+  NOT_LIKE: (target, filter) => !target.includes(filter),
+  EQ: (target, filter) => target === filter,
+  NE: (target, filter) => target !== filter,
+}
+
 export function createLookupModalViewModel(self, id, lookup, schema, records, callback, sub) {
   document.getElementById('main').insertAdjacentHTML('beforeend', `<div id="${id}"></div>`)
   return new Vue({
@@ -52,9 +59,8 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
             ? records.filter(_ => {
                 const record = kintone.mobile.app.record.get().record
                 const subRecord = sub && record[sub.var].value[sub.index].value
-                return this.extraFilter.every(
-                  extra =>
-                    _[extra.target].value === (subRecord ? subRecord[extra.filter].value : record[extra.filter].value)
+                return this.extraFilter.every(({ target, filter, op }) =>
+                  comparison[op](_[target].value, subRecord ? subRecord[filter].value : record[filter].value)
                 )
               })
             : records

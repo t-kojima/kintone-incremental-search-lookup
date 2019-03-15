@@ -57,7 +57,7 @@ export default {
       // 拡張フィルタをモーダルに設定
       this.modal.extraFilter = children
         .filter(_ => this.isExtraFilter(_))
-        .map(({ key, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value })
+        .map(({ key, op, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value, op })
 
       this.modal.onSearch(this.input)
     },
