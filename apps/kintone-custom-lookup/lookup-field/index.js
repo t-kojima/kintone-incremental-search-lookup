@@ -28,6 +28,7 @@ export default {
     lookup: Object,
     schema: Object,
     callback: Function,
+    sub: Object,
   },
   created() {
     kintoneUtility.rest
@@ -39,7 +40,8 @@ export default {
           this.lookup,
           this.schema,
           records,
-          this.onSelect
+          this.onSelect,
+          this.sub
         )
       })
       .then(() => {
@@ -76,15 +78,24 @@ export default {
 
       // オリジナルルックアップへのフィールドコピー
       const _record = kintone.mobile.app.record.get()
-      const field = this.schema.table.fieldList[fieldId]
-      _record.record[field.var].value = record[targetField.var].value
-      _record.record[field.var].lookup = true
+      const field = this.fieldList[fieldId] || this.subFieldList[fieldId]
+      if (this.sub) {
+        const values = _record.record[this.sub.var].value
+        values[this.sub.index].value[field.var].value = record[targetField.var].value
+        values[this.sub.index].value[field.var].lookup = true
+      } else {
+        _record.record[field.var].value = record[targetField.var].value
+        _record.record[field.var].lookup = true
+      }
       kintone.mobile.app.record.set(_record)
 
       this.callback(record)
     },
     isExtraFilter({ value }) {
-      return Object.values(this.fieldList).find(_ => _.var === value.value)
+      return (
+        Object.values(this.fieldList).find(_ => _.var === value.value) ||
+        Object.values(this.subFieldList).find(_ => _.var === value.value)
+      )
     },
   },
   computed: {
@@ -101,10 +112,13 @@ export default {
       const {
         keyMapping: { fieldId },
       } = this.lookup
-      return this.fieldList[fieldId]
+      return this.fieldList[fieldId] || this.subFieldList[fieldId]
     },
     fieldList() {
       return this.schema.table.fieldList
+    },
+    subFieldList() {
+      return this.sub && this.schema.subTable[this.sub.id].fieldList
     },
     targetAppId() {
       return this.lookup.targetApp.id

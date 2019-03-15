@@ -2,9 +2,11 @@
 import Vue from 'vue'
 import { createId } from '../utils'
 import LookupField from './lookup-field'
+import template from './template.html'
+
+// TODO callbackのイベント処理
 
 const { lookups, schema } = cybozu.data.page.FORM_DATA
-console.log(cybozu.data.page.FORM_DATA)
 
 kintone.events.on('mobile.app.record.create.show', event => {
   lookups.forEach(lookup => {
@@ -14,26 +16,45 @@ kintone.events.on('mobile.app.record.create.show', event => {
     const [baseLookup] = document.getElementsByClassName(`field-${fieldId}`)
     const field = schema.table.fieldList[fieldId]
     if (baseLookup && field) {
-      createLookupViewModel(baseLookup, lookup, schema)
+      baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema)
     }
+    Object.values(schema.subTable).forEach(sub => {
+      const subTableField = sub.fieldList[fieldId]
+      if (baseLookup && subTableField) {
+        baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, { id: sub.id, var: sub.var, index: 0 })
+      }
+    })
   })
   return event
 })
 
+// サブテーブルのレコード増減
 Object.values(schema.subTable).forEach(sub => {
   kintone.events.on(`mobile.app.record.create.change.${sub.var}`, event => {
-    // TODO: サブテーブルのViewModelの増減はここでやる
+    lookups.forEach(lookup => {
+      const {
+        keyMapping: { fieldId },
+      } = lookup
+      if (sub.fieldList[fieldId]) {
+        const baseLookups = document.getElementsByClassName(`field-${fieldId}`)
+        Array.from(baseLookups).forEach((baseLookup, i) => {
+          if (!baseLookup.vm) {
+            baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, { id: sub.id, var: sub.var, index: i })
+          }
+        })
+      }
+    })
     return event
   })
 })
 
-function createLookupViewModel(parent, lookup, schema) {
+function createLookupViewModel(parent, lookup, schema, sub) {
   const id = `js-lookup-field-${createId()}-${lookup.keyMapping.fieldId}`
   parent.insertAdjacentHTML('afterend', `<div id="${id}" />`)
   parent.style.display = 'none'
-  new Vue({
+  return new Vue({
     el: `#${id}`,
-    data: { id, parent, lookup, schema },
+    data: { id, parent, lookup, schema, sub },
     components: { 'lookup-field': LookupField },
     methods: {
       onSelect(record) {
@@ -42,10 +63,6 @@ function createLookupViewModel(parent, lookup, schema) {
         // EventEmitter -> イベントのインスタンスをどこに置く？window？
       },
     },
-    template: `<lookup-field id="id" :parent="parent" :lookup="lookup" :schema="schema" :callback="onSelect"></lookup-field>`,
+    template,
   })
 }
-
-kintone.events.on('mobile.app.record.create.change.部署', event => {
-  console.log('fire!')
-})
