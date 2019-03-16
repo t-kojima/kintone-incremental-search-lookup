@@ -1,0 +1,21 @@
+{
+  "manifest_version": 1,
+  "version": 1,
+  "type": "APP",
+  "icon": "image/icon.png",
+  "config": {
+    "html": "html/config.html",
+    "js": ["js/config.js"]
+  },
+  "name": {
+    "ja": "Incremental Search Lookup",
+    "en": "Incremental Search Lookup"
+  },
+  "description": {
+    "ja": "インクリメンタルサーチが利用可能なルックアップフィールド",
+    "en": "Lookup field available for incremental search"
+  },
+  "mobile": {
+    "js": ["js/kintone-custom-lookup.js"]
+  }
+}

@@ -14,7 +14,8 @@
     "release:s3": "cross-env S3=true npm run release",
     "prettier": "prettier --write \"apps/**/*.js\" \"config/**/*.js\"",
     "eslint": "eslint --fix \"apps/**/*.js\" \"config/**/*.js\"",
-    "eslint-check": "eslint --print-config .eslintrc.js | eslint-config-prettier-check"
+    "eslint-check": "eslint --print-config .eslintrc.js | eslint-config-prettier-check",
+    "upload": "kintone-plugin-uploader dist/plugin.zip --watch --waiting-dialog-ms 3000"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,8 @@
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
+    "@kintone/plugin-uploader": "^2.4.6",
+    "@kintone/webpack-plugin-kintone-plugin": "^1.0.10",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.4",
     "cross-env": "^5.2.0",

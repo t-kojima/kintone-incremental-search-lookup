@@ -1,3 +1,5 @@
+const path = require('path')
+const KintonePlugin = require('@kintone/webpack-plugin-kintone-plugin')
 const config = require('../.goqoo/webpack.config.base')
 
 // Edit the "config" object as you like.
@@ -16,5 +18,14 @@ const config = require('../.goqoo/webpack.config.base')
 // config.devServer.hot = true
 
 // And more!
+
+config.output = { path: path.resolve('plugin', 'js') }
+config.plugins.push(
+  new KintonePlugin({
+    manifestJSONPath: './plugin/manifest.json',
+    privateKeyPath: './private.ppk',
+    pluginZipPath: './dist/plugin.zip',
+  })
+)
 
 module.exports = config
