@@ -20,6 +20,20 @@ const globalState = {
   selectedId: null,
 }
 
+function beforeSelectAction(lookup, id) {
+  const fieldList = lookup.targetApp.schema.table.fieldList
+  const fieldId = Object.values(fieldList).find(({ type }) => type === 'RECORD_ID').id
+  lookup.listFields.push(fieldId)
+  globalState.selectedId = id
+  globalState.activeLookup = lookup
+}
+
+function afterSelectAction(lookup) {
+  lookup.listFields.pop()
+  globalState.selectedId = null
+  globalState.activeLookup = null
+}
+
 new MutationObserver(() => {
   const { activeLookup: lookup, selectedId } = globalState
   const [dialog] = document.getElementsByClassName('gaia-mobile-navigationcontroller gaia-mobile-ui-forms-lookupdialog')
@@ -27,7 +41,7 @@ new MutationObserver(() => {
     dialog.style.display = 'none'
     const fieldId = lookup.listFields[lookup.listFields.length - 1]
 
-    const searchRecoedWithNextPage = (fieldId) => {
+    const searchRecoedFromAllPages = fieldId => {
       const records = document.getElementsByClassName('gaia-mobile-app-lookuplist-record')
       const record = Array.from(records).find(record => {
         const [row] = record.getElementsByClassName(`value-${fieldId}`)
@@ -35,13 +49,13 @@ new MutationObserver(() => {
       })
       if (record) {
         simulateMouseClick(record)
-        lookup.listFields.pop()
+        afterSelectAction(lookup)
       } else {
         const button = document.getElementsByClassName('gaia-mobile-ui-barbutton')[3]
         if (!button.className.includes('button-disabled-gaia')) {
           simulateMouseClick(button)
         } else {
-          console.log(button.className)
+          afterSelectAction(lookup)
         }
       }
     }
@@ -49,11 +63,11 @@ new MutationObserver(() => {
     new MutationObserver(mutationRecords => {
       const node = mutationRecords[0].removedNodes[0]
       if (node && node.className === 'cybozu-ui-loading-outer') {
-        searchRecoedWithNextPage(fieldId)
+        searchRecoedFromAllPages(fieldId)
       }
     }).observe(dialog, { childList: true })
 
-    searchRecoedWithNextPage(fieldId)
+    searchRecoedFromAllPages(fieldId)
   }
 }).observe(document.getElementById('main'), { childList: true })
 
@@ -105,8 +119,6 @@ export default {
         .map(
           ({ key, op, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value, op }
         )
-
-      globalState.activeLookup = this.lookup
       this.modal.onSearch(this.input)
     },
     onClear() {
@@ -131,26 +143,12 @@ export default {
       if (this.sub) {
         const values = _record.record[this.sub.var].value
         values[this.sub.index].value[field.var].value = record[targetField.var].value
-        // values[this.sub.index].value[field.var].lookup = true
       } else {
         _record.record[field.var].value = record[targetField.var].value
-        // _record.record[field.var].lookup = true
       }
       kintone.mobile.app.record.set(_record)
 
-      // オリジナルルックアップへのボタンをクリック、MutationObserverで値を挿入
-      // this.condition = query.condition
-      const key = Object.values(this.targetFieldList).find(({ type }) => type === 'RECORD_ID').id
-      // query.condition = {
-      //   key,
-      //   nest: 0,
-      //   op: 'EQ',
-      //   type: 'COMPARISON',
-      //   value: { args: null, type: 'STRING', value: record.$id.value },
-      // }
-      this.lookup.listFields.push(key)
-      globalState.selectedId = record.$id.value
-      // this.lookup.query.condition = null
+      beforeSelectAction(this.lookup, record.$id.value)
       const [button] = this.parent.getElementsByClassName('forms-lookup-lookup-gaia')
       button.click()
 

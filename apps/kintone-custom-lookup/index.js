@@ -61,7 +61,7 @@ Object.values(schema.subTable).forEach(sub => {
 function createLookupViewModel(parent, lookup, schema, sub) {
   const id = `js-lookup-field-${createId()}-${lookup.keyMapping.fieldId}`
   parent.insertAdjacentHTML('afterend', `<div id="${id}" />`)
-  // parent.style.display = 'none'
+  parent.style.display = 'none'
   return new Vue({
     el: `#${id}`,
     data: { id, parent, lookup, schema, sub },
