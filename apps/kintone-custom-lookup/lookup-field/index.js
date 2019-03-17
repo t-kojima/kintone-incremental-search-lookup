@@ -109,16 +109,16 @@ export default {
   },
   methods: {
     openModal() {
-      const {
-        query: { condition },
-      } = this.lookup
-      const children = condition ? (condition.children ? condition.children : [condition]) : []
+      // const {
+      //   query: { condition },
+      // } = this.lookup
+      // const children = condition ? (condition.children ? condition.children : [condition]) : []
       // 拡張フィルタをモーダルに設定
-      this.modal.extraFilter = children
-        .filter(_ => this.isExtraFilter(_))
-        .map(
-          ({ key, op, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value, op }
-        )
+      // this.modal.extraFilter = children
+      //   .filter(_ => this.isExtraFilter(_))
+      //   .map(
+      //     ({ key, op, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value, op }
+      //   )
       this.modal.onSearch(this.input)
     },
     onClear() {
@@ -154,12 +154,12 @@ export default {
 
       this.callback(record)
     },
-    isExtraFilter({ value }) {
-      return (
-        Object.values(this.fieldList).find(_ => _.var === value.value) ||
-        (this.subFieldList && Object.values(this.subFieldList).find(_ => _.var === value.value))
-      )
-    },
+    // isExtraFilter({ value }) {
+    //   return (
+    //     Object.values(this.fieldList).find(_ => _.var === value.value) ||
+    //     (this.subFieldList && Object.values(this.subFieldList).find(_ => _.var === value.value))
+    //   )
+    // },
   },
   computed: {
     label() {
@@ -207,7 +207,7 @@ export default {
       } = this.lookup
       const children = condition ? (condition.children ? condition.children : [condition]) : []
       const conditions = children
-        .filter(_ => !isStatus(_) && !this.isExtraFilter(_))
+        .filter(_ => !isStatus(_)) // && !this.isExtraFilter(_))
         .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} ${getValue(_)}`)
         .join(` ${condition && condition.op.toLowerCase()} `)
       const order = `order by ${orders

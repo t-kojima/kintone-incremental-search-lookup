@@ -20,7 +20,7 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
       records,
       input: '',
       active: false,
-      extraFilter: [],
+      // extraFilter: [],
     },
     methods: {
       onClickItem(record) {
@@ -54,18 +54,19 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
               })
             : records
         }
-        const filterFromExtra = records => {
-          return this.extraFilter.length
-            ? records.filter(_ => {
-                const record = kintone.mobile.app.record.get().record
-                const subRecord = sub && record[sub.var].value[sub.index].value
-                return this.extraFilter.every(({ target, filter, op }) =>
-                  comparison[op](_[target].value, subRecord ? subRecord[filter].value : record[filter].value)
-                )
-              })
-            : records
-        }
-        return filterFromExtra(filterFromInput(this.records))
+        // const filterFromExtra = records => {
+        //   return this.extraFilter.length
+        //     ? records.filter(_ => {
+        //         const record = kintone.mobile.app.record.get().record
+        //         const subRecord = sub && record[sub.var].value[sub.index].value
+        //         return this.extraFilter.every(({ target, filter, op }) =>
+        //           comparison[op](_[target].value, subRecord ? subRecord[filter].value : record[filter].value)
+        //         )
+        //       })
+        //     : records
+        // }
+        return filterFromInput(this.records)
+        // return filterFromExtra(filterFromInput(this.records))
       },
     },
     template,
