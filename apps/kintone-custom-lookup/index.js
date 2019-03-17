@@ -6,6 +6,13 @@ import template from './template.html'
 
 // TODO callbackのイベント処理
 
+// プラグイン設定の読み込み ＆ disabled判定
+const config = Object.values(kintone.plugin.app.getConfig(kintone.$PLUGIN_ID)).map(_ => JSON.parse(_))
+function isDisabled(field) {
+  const setting = config.find(_ => _.code === field.var)
+  return (setting && setting.disabled) || false
+}
+
 const { lookups, schema } = cybozu.data.page.FORM_DATA
 
 kintone.events.on('mobile.app.record.create.show', event => {
@@ -15,12 +22,12 @@ kintone.events.on('mobile.app.record.create.show', event => {
     } = lookup
     const [baseLookup] = document.getElementsByClassName(`field-${fieldId}`)
     const field = schema.table.fieldList[fieldId]
-    if (baseLookup && field) {
+    if (baseLookup && field && !isDisabled(field)) {
       baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema)
     }
     Object.values(schema.subTable).forEach(sub => {
       const subTableField = sub.fieldList[fieldId]
-      if (baseLookup && subTableField) {
+      if (baseLookup && subTableField && !isDisabled(subTableField)) {
         baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, { id: sub.id, var: sub.var, index: 0 })
       }
     })
