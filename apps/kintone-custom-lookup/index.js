@@ -5,9 +5,12 @@ import LookupField from './lookup-field'
 import template from './template.html'
 
 // TODO callbackのイベント処理
+// TODO edit show
 
 // プラグイン設定の読み込み ＆ disabled判定
-const config = Object.values(kintone.plugin.app.getConfig(kintone.$PLUGIN_ID)).map(_ => JSON.parse(_))
+const config = kintone.$PLUGIN_ID
+  ? Object.values(kintone.plugin.app.getConfig(kintone.$PLUGIN_ID)).map(_ => JSON.parse(_))
+  : []
 function isDisabled(field) {
   const setting = config.find(_ => _.code === field.var)
   return (setting && setting.disabled) || false
@@ -58,7 +61,7 @@ Object.values(schema.subTable).forEach(sub => {
 function createLookupViewModel(parent, lookup, schema, sub) {
   const id = `js-lookup-field-${createId()}-${lookup.keyMapping.fieldId}`
   parent.insertAdjacentHTML('afterend', `<div id="${id}" />`)
-  parent.style.display = 'none'
+  // parent.style.display = 'none'
   return new Vue({
     el: `#${id}`,
     data: { id, parent, lookup, schema, sub },
