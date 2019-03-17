@@ -1,3 +1,4 @@
 apps:
   - kintone-custom-lookup
+  - config
 useDropbox: false
