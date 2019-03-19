@@ -5,14 +5,7 @@ import style from './style.scss'
 
 style.use()
 
-const comparison = {
-  LIKE: (target, filter) => filter ? target.includes(filter) : true,
-  NOT_LIKE: (target, filter) => !target.includes(filter),
-  EQ: (target, filter) => target === filter,
-  NE: (target, filter) => target !== filter,
-}
-
-export function createLookupModalViewModel(self, id, lookup, schema, records, callback, sub) {
+export function createLookupModalViewModel(id, lookup, schema, records, callback, sub) {
   document.getElementById('main').insertAdjacentHTML('beforeend', `<div id="${id}"></div>`)
   return new Vue({
     el: `#${id}`,
@@ -20,14 +13,21 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
       records,
       input: '',
       active: false,
-      // extraFilter: [],
+      extraFilter: null,
     },
     methods: {
       onClickItem(record) {
+        const [element] = document.getElementsByClassName(this.fieldCode)
+        element.dispatchEvent(new CustomEvent('select-item', { detail: { record } }))
         callback(record)
         this.active = false
       },
       onSearch(value) {
+        const setExtraFilter = f => {
+          this.extraFilter = f
+        }
+        const [element] = document.getElementsByClassName(this.fieldCode)
+        element.dispatchEvent(new CustomEvent('open-modal', { detail: { setFilter: setExtraFilter } }))
         this.input = value
         this.active = true
       },
@@ -41,6 +41,11 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
       },
     },
     computed: {
+      fieldCode() {
+        const fieldId = lookup.keyMapping.fieldId
+        const fieldList = sub ? schema.subTable[sub.id].fieldList : schema.table.fieldList
+        return fieldList[fieldId].var
+      },
       filterdRecords() {
         const filterFromInput = records => {
           const words = this.input
@@ -54,19 +59,7 @@ export function createLookupModalViewModel(self, id, lookup, schema, records, ca
               })
             : records
         }
-        // const filterFromExtra = records => {
-        //   return this.extraFilter.length
-        //     ? records.filter(_ => {
-        //         const record = kintone.mobile.app.record.get().record
-        //         const subRecord = sub && record[sub.var].value[sub.index].value
-        //         return this.extraFilter.every(({ target, filter, op }) =>
-        //           comparison[op](_[target].value, subRecord ? subRecord[filter].value : record[filter].value)
-        //         )
-        //       })
-        //     : records
-        // }
-        return filterFromInput(this.records)
-        // return filterFromExtra(filterFromInput(this.records))
+        return this.extraFilter ? this.extraFilter(filterFromInput(this.records)) : filterFromInput(this.records)
       },
     },
     template,

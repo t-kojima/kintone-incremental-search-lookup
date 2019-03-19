@@ -4,7 +4,6 @@ import { createId } from '../utils'
 import LookupField from './lookup-field'
 import template from './template.html'
 
-// TODO callbackのイベント処理
 // TODO edit show
 
 // プラグイン設定の読み込み ＆ disabled判定
@@ -66,13 +65,6 @@ function createLookupViewModel(parent, lookup, schema, sub) {
     el: `#${id}`,
     data: { id, parent, lookup, schema, sub },
     components: { 'lookup-field': LookupField },
-    methods: {
-      onSelect(record) {
-        // TODO: このレコードを外から取得したいよね
-        // EventListener -> kintone.app.record.getFieldElementがモバイルで使えない
-        // EventEmitter -> イベントのインスタンスをどこに置く？window？
-      },
-    },
     template,
   })
 }

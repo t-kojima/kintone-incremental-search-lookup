@@ -89,7 +89,6 @@ export default {
     parent: HTMLDivElement,
     lookup: Object,
     schema: Object,
-    callback: Function,
     sub: Object,
   },
   created() {
@@ -97,7 +96,6 @@ export default {
       .getAllRecordsByQuery({ app: this.targetAppId, query: this.query })
       .then(({ records }) => {
         this.modal = createLookupModalViewModel(
-          this,
           `${this.id}-modal`,
           this.lookup,
           this.schema,
@@ -112,24 +110,12 @@ export default {
   },
   methods: {
     openModal() {
-      // const {
-      //   query: { condition },
-      // } = this.lookup
-      // const children = condition ? (condition.children ? condition.children : [condition]) : []
-      // 拡張フィルタをモーダルに設定
-      // this.modal.extraFilter = children
-      //   .filter(_ => this.isExtraFilter(_))
-      //   .map(
-      //     ({ key, op, value }) => value && { target: this.targetFieldList[key.slice(1)].var, filter: value.value, op }
-      //   )
       this.modal.onSearch(this.input)
     },
     onClear() {
       this.input = ''
       const [clear] = this.parent.getElementsByClassName('forms-lookup-clear-gaia')
       clear.click()
-
-      this.callback()
     },
     onSelect(record) {
       const {
@@ -142,19 +128,14 @@ export default {
       beforeSelectAction(this.lookup, record.$id.value)
       const [button] = this.parent.getElementsByClassName('forms-lookup-lookup-gaia')
       button.click()
-
-      this.callback(record)
     },
-    // isExtraFilter({ value }) {
-    //   return (
-    //     Object.values(this.fieldList).find(_ => _.var === value.value) ||
-    //     (this.subFieldList && Object.values(this.subFieldList).find(_ => _.var === value.value))
-    //   )
-    // },
   },
   computed: {
     label() {
       return this.field.label
+    },
+    fieldCode() {
+      return this.field.var
     },
     required() {
       return JSON.parse(this.field.properties.required)
@@ -198,7 +179,7 @@ export default {
       } = this.lookup
       const children = condition ? (condition.children ? condition.children : [condition]) : []
       const conditions = children
-        .filter(_ => !isStatus(_)) // && !this.isExtraFilter(_))
+        .filter(_ => !isStatus(_))
         .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} ${getValue(_)}`)
         .join(` ${condition && condition.op.toLowerCase()} `)
       const order = `order by ${orders
