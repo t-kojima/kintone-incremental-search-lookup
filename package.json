@@ -1,6 +1,6 @@
 {
   "name": "kintone-incremental-search-lookup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plugin to enable incremental search in kintone lookup field",
   "keywords": [
     "kintone"
