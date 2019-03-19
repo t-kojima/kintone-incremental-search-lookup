@@ -1,0 +1,27 @@
+<div class="kintone-incremental-search-lookup-config">
+  <article class="message is-warning">
+    <div class="message-body">
+      This plugin can only be used on mobile.
+    </div>
+  </article>
+  <table class="table is-fullwidth">
+    <thead>
+      <tr>
+        <th>Label</th>
+        <th>Field Code</th>
+        <th>Disabled</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(field,index) in lookups">
+        <td>{{ field.label }}</td>
+        <td>{{ field.code }}</td>
+        <td><input type="checkbox" v-model="field.disabled" /></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="block">
+    <button type="button" class="kintoneplugin-button-dialog-cancel" @click="cancel">Cancel</button>
+    <button type="button" class="kintoneplugin-button-dialog-ok" @click="save">Save</button>
+  </div>
+</div>

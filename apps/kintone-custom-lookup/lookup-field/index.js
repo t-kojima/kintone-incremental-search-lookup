@@ -1,12 +1,78 @@
 import kintoneUtility from 'kintone-utility'
 import template from './template.html'
-import style from '../../51-modern-default.min.css'
 import { createLookupModalViewModel } from '../lookup-field-modal'
+import { simulateMouseClick } from '../../utils'
 
-style.use()
+const operators = {
+  LIKE: 'like',
+  NOT_LIKE: 'not like',
+  EQ: '=',
+  NE: '!=',
+  LE: '<=',
+  GE: '>=',
+  IN: 'in',
+  NOT_IN: 'not in',
+}
 
-// TODO query order by
-// TODO クリア
+const globalState = {
+  // アクティブ（モーダルが開いてる）ルックアップ
+  activeLookup: null,
+  selectedId: null,
+}
+
+function beforeSelectAction(lookup, id) {
+  const fieldList = lookup.targetApp.schema.table.fieldList
+  const fieldId = Object.values(fieldList).find(({ type }) => type === 'RECORD_ID').id
+  lookup.listFields.push(fieldId)
+  globalState.selectedId = id
+  globalState.activeLookup = lookup
+}
+
+function afterSelectAction(lookup) {
+  lookup.listFields.pop()
+  globalState.selectedId = null
+  globalState.activeLookup = null
+}
+
+function searchRecoedFromAllPages(fieldId) {
+  const { activeLookup: lookup, selectedId } = globalState
+  const records = document.getElementsByClassName('gaia-mobile-app-lookuplist-record')
+  const record = Array.from(records).find(record => {
+    const [row] = record.getElementsByClassName(`value-${fieldId}`)
+    return row.textContent === selectedId
+  })
+  if (record) {
+    simulateMouseClick(record)
+    afterSelectAction(lookup)
+  } else {
+    const button = document.getElementsByClassName('gaia-mobile-ui-barbutton')[3]
+    if (!button.className.includes('button-disabled-gaia')) {
+      simulateMouseClick(button)
+    } else {
+      afterSelectAction(lookup)
+    }
+  }
+}
+
+new MutationObserver(() => {
+  const { activeLookup: lookup } = globalState
+  const [dialog] = document.getElementsByClassName('gaia-mobile-navigationcontroller gaia-mobile-ui-forms-lookupdialog')
+  if (dialog && !dialog.className.includes('custom-modal') && lookup) {
+    dialog.style.display = 'none'
+    const fieldId = lookup.listFields[lookup.listFields.length - 1]
+
+    new MutationObserver(mutationRecords => {
+      const node = mutationRecords[0].removedNodes[0]
+      if (node && node.className === 'cybozu-ui-loading-outer') {
+        // 2ページ目以降の検索
+        searchRecoedFromAllPages(fieldId)
+      }
+    }).observe(dialog, { childList: true })
+
+    // 1ページ目の検索
+    searchRecoedFromAllPages(fieldId)
+  }
+}).observe(document.getElementById('main'), { childList: true })
 
 export default {
   name: 'LookupField',
@@ -15,6 +81,7 @@ export default {
       input: '',
       disabled: true,
       modal: null,
+      condition: null,
     }
   },
   props: {
@@ -22,19 +89,19 @@ export default {
     parent: HTMLDivElement,
     lookup: Object,
     schema: Object,
-    callback: Function,
+    sub: Object,
   },
   created() {
     kintoneUtility.rest
-      .getAllRecordsByQuery({ app: this.targetAppId, query: 'order by $id asc' })
+      .getAllRecordsByQuery({ app: this.targetAppId, query: this.query })
       .then(({ records }) => {
         this.modal = createLookupModalViewModel(
-          this,
           `${this.id}-modal`,
           this.lookup,
           this.schema,
           records,
-          this.onSelect
+          this.onSelect,
+          this.sub
         )
       })
       .then(() => {
@@ -49,44 +116,76 @@ export default {
       this.input = ''
       const [clear] = this.parent.getElementsByClassName('forms-lookup-clear-gaia')
       clear.click()
-
-      this.callback()
     },
     onSelect(record) {
       const {
-        keyMapping: { fieldId, targetFieldId },
-        targetApp: {
-          schema: {
-            table: { fieldList },
-          },
-        },
+        keyMapping: { targetFieldId },
       } = this.lookup
       // カスタムルックアップへのフィールドコピー
-      const targetField = fieldList[targetFieldId]
+      const targetField = this.targetFieldList[targetFieldId]
       this.input = record[targetField.var].value
 
-      // オリジナルルックアップへのフィールドコピー
-      const _record = kintone.mobile.app.record.get()
-      const field = this.schema.table.fieldList[fieldId]
-      _record.record[field.var].value = record[targetField.var].value
-      _record.record[field.var].lookup = true
-      kintone.mobile.app.record.set(_record)
-
-      this.callback(record)
+      beforeSelectAction(this.lookup, record.$id.value)
+      const [button] = this.parent.getElementsByClassName('forms-lookup-lookup-gaia')
+      button.click()
     },
   },
   computed: {
     label() {
+      return this.field.label
+    },
+    fieldCode() {
+      return this.field.var
+    },
+    required() {
+      return JSON.parse(this.field.properties.required)
+    },
+    noLabel() {
+      return JSON.parse(this.field.properties.noLabel)
+    },
+    field() {
       const {
         keyMapping: { fieldId },
       } = this.lookup
-      const {
-        table: { fieldList },
-      } = this.schema
-      return fieldList[fieldId].label
+      return this.fieldList[fieldId] || this.subFieldList[fieldId]
+    },
+    fieldList() {
+      return this.schema.table.fieldList
+    },
+    subFieldList() {
+      return this.sub && this.schema.subTable[this.sub.id].fieldList
     },
     targetAppId() {
       return this.lookup.targetApp.id
+    },
+    targetFieldList() {
+      return this.lookup.targetApp.schema.table.fieldList
+    },
+    query() {
+      // MEMO: type: 'STATUS' はサポートしない
+      const isStatus = ({ key }) => this.targetFieldList[key.slice(1)].type === 'STATUS'
+      const getValue = ({ key, type, value, values }) => {
+        if (type === 'COMPARISON') {
+          return `"${value.value}"`
+        } else {
+          const options = this.targetFieldList[key.slice(1)].properties.options
+          return `(${values
+            .map(_ => (_.value ? `"${options.find(option => option.id === _.value).label}"` : `""`))
+            .join(',')})`
+        }
+      }
+      const {
+        query: { orders, condition },
+      } = this.lookup
+      const children = condition ? (condition.children ? condition.children : [condition]) : []
+      const conditions = children
+        .filter(_ => !isStatus(_))
+        .map(_ => `${this.targetFieldList[_.key.slice(1)].var} ${operators[_.op]} ${getValue(_)}`)
+        .join(` ${condition && condition.op.toLowerCase()} `)
+      const order = `order by ${orders
+        .map(_ => `${this.targetFieldList[_.name.slice(1)].var} ${_.op.toLowerCase()}`)
+        .join(',')}`
+      return `${conditions} ${order}`.trim()
     },
   },
   template,
