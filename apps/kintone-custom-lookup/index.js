@@ -17,7 +17,7 @@ function isDisabled(field) {
 
 const { lookups, schema } = cybozu.data.page.FORM_DATA
 
-kintone.events.on('mobile.app.record.create.show', event => {
+kintone.events.on(['mobile.app.record.create.show', 'mobile.app.record.edit.show'], event => {
   lookups.forEach(lookup => {
     const {
       keyMapping: { fieldId },
