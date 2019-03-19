@@ -2,7 +2,9 @@
   "name": "kintone-incremental-search-lookup",
   "version": "1.0.0",
   "description": "Plugin to enable incremental search in kintone lookup field",
-  "keywords": ["kintone"],
+  "keywords": [
+    "kintone"
+  ],
   "author": "t-kojima <t-kojima@skullware.net>",
   "license": "MIT",
   "homepage": "https://github.com/t-kojima/kintone-incremental-search-lookup",
@@ -28,6 +30,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.3.4",
     "@babel/preset-env": "^7.0.0",
     "@kintone/plugin-uploader": "^2.4.6",
     "@kintone/webpack-plugin-kintone-plugin": "^1.0.10",
@@ -63,6 +66,7 @@
     "webpack-s3-plugin": "^1.0.2"
   },
   "dependencies": {
+    "@babel/runtime": "^7.3.4",
     "babel-polyfill": "^6.26.0",
     "bulma": "^0.7.4",
     "foundation-sites": "^6.5.0-rc.4",

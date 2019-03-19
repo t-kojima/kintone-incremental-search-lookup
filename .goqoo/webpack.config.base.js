@@ -10,7 +10,7 @@ const { npm_package_name: projectName } = process.env
 const { apps, useDropbox } = rcfile('goqoo', { configFileName: path.resolve('config', 'goqoo.config') }).config
 
 const entry = apps.reduce((obj, appName) => {
-  obj[appName] = ['babel-polyfill', path.resolve('apps', appName)]
+  obj[appName] = path.resolve('apps', appName)
   return obj
 }, {})
 
@@ -53,16 +53,7 @@ const config = {
         loader: 'babel-loader',
         exclude: /node_modules/,
         query: {
-          presets: [
-            [
-              '@babel/preset-env',
-              {
-                targets: { browsers: ['last 2 versions'] },
-                modules: false,
-              },
-            ],
-          ],
-          plugins: [['@babel/proposal-class-properties', { loose: false }]],
+          plugins: ["@babel/plugin-transform-runtime"],
         },
       },
       {
