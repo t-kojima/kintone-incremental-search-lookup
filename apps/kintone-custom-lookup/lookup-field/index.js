@@ -34,19 +34,20 @@ function afterSelectAction(lookup) {
   globalState.activeLookup = null
 }
 
-function searchRecoedFromAllPages(fieldId) {
+function searchRecoedFromAllPages(dialog, fieldId) {
   const { activeLookup: lookup, selectedId } = globalState
-  const records = document.getElementsByClassName('gaia-mobile-app-lookuplist-record')
+  const records = dialog.getElementsByClassName('gaia-mobile-app-lookuplist-record')
   const record = Array.from(records).find(record => {
     const [row] = record.getElementsByClassName(`value-${fieldId}`)
-    return row.textContent === selectedId
+    return row && row.textContent === selectedId
   })
   if (record) {
     simulateMouseClick(record)
     afterSelectAction(lookup)
   } else {
-    const button = document.getElementsByClassName('gaia-mobile-ui-barbutton')[3]
-    if (!button.className.includes('button-disabled-gaia')) {
+    const [left] = dialog.getElementsByClassName('navigation-header-left')
+    const button = left.getElementsByClassName('gaia-mobile-ui-barbutton')[1]
+    if (button && !button.className.includes('button-disabled-gaia')) {
       simulateMouseClick(button)
     } else {
       afterSelectAction(lookup)
@@ -65,12 +66,12 @@ new MutationObserver(() => {
       const node = mutationRecords[0].removedNodes[0]
       if (node && node.className === 'cybozu-ui-loading-outer') {
         // 2ページ目以降の検索
-        searchRecoedFromAllPages(fieldId)
+        searchRecoedFromAllPages(dialog, fieldId)
       }
     }).observe(dialog, { childList: true })
 
     // 1ページ目の検索
-    searchRecoedFromAllPages(fieldId)
+    searchRecoedFromAllPages(dialog, fieldId)
   }
 }).observe(document.getElementById('main'), { childList: true })
 
@@ -89,9 +90,11 @@ export default {
     parent: HTMLDivElement,
     lookup: Object,
     schema: Object,
+    value: String,
     sub: Object,
   },
   created() {
+    this.input = this.value
     kintoneUtility.rest
       .getAllRecordsByQuery({ app: this.targetAppId, query: this.query })
       .then(({ records }) => {

@@ -4,8 +4,6 @@ import { createId } from '../utils'
 import LookupField from './lookup-field'
 import template from './template.html'
 
-// TODO edit show
-
 // プラグイン設定の読み込み ＆ disabled判定
 const config = kintone.$PLUGIN_ID
   ? Object.values(kintone.plugin.app.getConfig(kintone.$PLUGIN_ID)).map(_ => JSON.parse(_))
@@ -17,20 +15,25 @@ function isDisabled(field) {
 
 const { lookups, schema } = cybozu.data.page.FORM_DATA
 
-kintone.events.on('mobile.app.record.create.show', event => {
+kintone.events.on(['mobile.app.record.create.show', 'mobile.app.record.edit.show'], event => {
   lookups.forEach(lookup => {
     const {
       keyMapping: { fieldId },
     } = lookup
-    const [baseLookup] = document.getElementsByClassName(`field-${fieldId}`)
+    const baseLookups = document.getElementsByClassName(`field-${fieldId}`)
     const field = schema.table.fieldList[fieldId]
-    if (baseLookup && field && !isDisabled(field)) {
-      baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema)
+    if (baseLookups.length && field && !isDisabled(field)) {
+      const [baseLookup] = baseLookups
+      const value = event.record[field.var].value || ''
+      baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, value)
     }
     Object.values(schema.subTable).forEach(sub => {
       const subTableField = sub.fieldList[fieldId]
-      if (baseLookup && subTableField && !isDisabled(subTableField)) {
-        baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, { id: sub.id, var: sub.var, index: 0 })
+      if (baseLookups.length && subTableField && !isDisabled(subTableField)) {
+        Array.from(baseLookups).forEach((baseLookup, i) => {
+          const value = event.record[sub.var].value[i].value[subTableField.var].value || ''
+          baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, value, { id: sub.id, var: sub.var, index: i })
+        })
       }
     })
   })
@@ -39,7 +42,7 @@ kintone.events.on('mobile.app.record.create.show', event => {
 
 // サブテーブルのレコード増減
 Object.values(schema.subTable).forEach(sub => {
-  kintone.events.on(`mobile.app.record.create.change.${sub.var}`, event => {
+  kintone.events.on([`mobile.app.record.create.change.${sub.var}`, `mobile.app.record.edit.change.${sub.var}`], event => {
     lookups.forEach(lookup => {
       const {
         keyMapping: { fieldId },
@@ -48,7 +51,7 @@ Object.values(schema.subTable).forEach(sub => {
         const baseLookups = document.getElementsByClassName(`field-${fieldId}`)
         Array.from(baseLookups).forEach((baseLookup, i) => {
           if (!baseLookup.vm) {
-            baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, { id: sub.id, var: sub.var, index: i })
+            baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, '', { id: sub.id, var: sub.var, index: i })
           }
         })
       }
@@ -57,13 +60,13 @@ Object.values(schema.subTable).forEach(sub => {
   })
 })
 
-function createLookupViewModel(parent, lookup, schema, sub) {
+function createLookupViewModel(parent, lookup, schema, value, sub) {
   const id = `js-lookup-field-${createId()}-${lookup.keyMapping.fieldId}`
   parent.insertAdjacentHTML('afterend', `<div id="${id}" />`)
   parent.style.display = 'none'
   return new Vue({
     el: `#${id}`,
-    data: { id, parent, lookup, schema, sub },
+    data: { id, parent, lookup, schema, value, sub },
     components: { 'lookup-field': LookupField },
     template,
   })
