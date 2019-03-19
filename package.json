@@ -1,7 +1,14 @@
 {
   "name": "kintone-incremental-search-lookup",
   "version": "1.0.0",
-  "description": "",
+  "description": "Plugin to enable incremental search in kintone lookup field",
+  "keywords": ["kintone"],
+  "author": "t-kojima <t-kojima@skullware.net>",
+  "license": "MIT",
+  "homepage": "https://github.com/t-kojima/kintone-incremental-search-lookup",
+  "bugs": {
+    "url": "https://github.com/t-kojima/kintone-incremental-search-lookup/issues"
+  },
   "scripts": {
     "start": "webpack-dev-server --config config/webpack.config.goqoo.js --mode development",
     "s": "npm start",
@@ -17,9 +24,6 @@
     "eslint-check": "eslint --print-config .eslintrc.js | eslint-config-prettier-check",
     "upload": "kintone-plugin-uploader dist/plugin.zip --watch --waiting-dialog-ms 3000"
   },
-  "keywords": [],
-  "author": "",
-  "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
     "@babel/core": "^7.0.0",
