@@ -30,9 +30,9 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
           .then(({ records }) => {
             this.records.push(...records)
             if (records.length) {
-              this.isLoading = false
-            } else {
               this.getRecords((offset || 0) + records.length)
+            } else {
+              this.isLoading = false
             }
           })
       },
