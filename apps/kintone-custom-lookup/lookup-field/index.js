@@ -1,4 +1,3 @@
-import kintoneUtility from 'kintone-utility'
 import template from './template.html'
 import { createLookupModalViewModel } from '../lookup-field-modal'
 import { simulateMouseClick } from '../../utils'
@@ -80,7 +79,6 @@ export default {
   data() {
     return {
       input: '',
-      disabled: true,
       modal: null,
       condition: null,
     }
@@ -95,21 +93,14 @@ export default {
   },
   created() {
     this.input = this.value
-    kintoneUtility.rest
-      .getAllRecordsByQuery({ app: this.targetAppId, query: this.query })
-      .then(({ records }) => {
-        this.modal = createLookupModalViewModel(
-          `${this.id}-modal`,
-          this.lookup,
-          this.schema,
-          records,
-          this.onSelect,
-          this.sub
-        )
-      })
-      .then(() => {
-        this.disabled = false
-      })
+    this.modal = createLookupModalViewModel(
+      `${this.id}-modal`,
+      this.lookup,
+      this.schema,
+      { app: this.targetAppId, query: this.query },
+      this.onSelect,
+      this.sub
+    )
   },
   methods: {
     openModal() {
