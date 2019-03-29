@@ -1,5 +1,8 @@
 <div class="lookup-field-modal" v-if="active">
-  <div class="gaia-mobile-navigationcontroller gaia-mobile-ui-forms-lookupdialog custom-modal" style="left: 0px; top: 0px;">
+  <div
+    class="gaia-mobile-navigationcontroller gaia-mobile-ui-forms-lookupdialog custom-modal"
+    style="left: 0px; top: 0px;"
+  >
     <div class="navigation-view">
       <div class="navigation-contents">
         <div class="navigation-innerview">
@@ -11,7 +14,9 @@
                     <ul class="gaia-mobile-app-lookuplist-fields">
                       <li v-for="label in labelItems(record)" class="gaia-mobile-app-lookuplist-field">
                         <div class="recordlist-cell-gaia recordlist-single_line_text-gaia">
-                          <div class="line-cell-gaia"><span>{{ label }}</span></div>
+                          <div class="line-cell-gaia">
+                            <span>{{ label }}</span>
+                          </div>
                         </div>
                       </li>
                     </ul>
@@ -53,7 +58,9 @@
         </table>
         <div class="navigation-header-shadow"></div>
       </div>
-      <div class="navigation-footer"></div>
+      <div v-if="isLoading" class="navigation-footer">
+        <div class="loader"></div>
+      </div>
     </div>
     <div class="android-hack"></div>
   </div>

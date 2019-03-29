@@ -15,6 +15,8 @@
       </div>
     </div>
     <div class="control-constraints-gaia"></div>
-    <div class="control-errors-gaia"></div>
+    <div v-if="isLoading" class="control-errors-gaia">
+      <div class="loader">Now Loading ...</div>
+    </div>
   </div>
 </div>

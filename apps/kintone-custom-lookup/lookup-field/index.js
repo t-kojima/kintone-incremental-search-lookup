@@ -1,7 +1,9 @@
-import kintoneUtility from 'kintone-utility'
 import template from './template.html'
 import { createLookupModalViewModel } from '../lookup-field-modal'
 import { simulateMouseClick } from '../../utils'
+import loader from '../loader.css'
+
+loader.use()
 
 const operators = {
   LIKE: 'like',
@@ -16,20 +18,25 @@ const operators = {
 
 const globalState = {
   // アクティブ（モーダルが開いてる）ルックアップ
+  viewModel: null,
   activeLookup: null,
   selectedId: null,
 }
 
-function beforeSelectAction(lookup, id) {
+function beforeSelectAction(vm, lookup, id) {
   const fieldList = lookup.targetApp.schema.table.fieldList
   const fieldId = Object.values(fieldList).find(({ type }) => type === 'RECORD_ID').id
   lookup.listFields.push(fieldId)
+  vm.isLoading = true
+  globalState.viewModel = vm
   globalState.selectedId = id
   globalState.activeLookup = lookup
 }
 
 function afterSelectAction(lookup) {
   lookup.listFields.pop()
+  globalState.viewModel.isLoading = false
+  globalState.viewModel = null
   globalState.selectedId = null
   globalState.activeLookup = null
 }
@@ -80,9 +87,9 @@ export default {
   data() {
     return {
       input: '',
-      disabled: true,
       modal: null,
       condition: null,
+      isLoading: false,
     }
   },
   props: {
@@ -95,21 +102,14 @@ export default {
   },
   created() {
     this.input = this.value
-    kintoneUtility.rest
-      .getAllRecordsByQuery({ app: this.targetAppId, query: this.query })
-      .then(({ records }) => {
-        this.modal = createLookupModalViewModel(
-          `${this.id}-modal`,
-          this.lookup,
-          this.schema,
-          records,
-          this.onSelect,
-          this.sub
-        )
-      })
-      .then(() => {
-        this.disabled = false
-      })
+    this.modal = createLookupModalViewModel(
+      `${this.id}-modal`,
+      this.lookup,
+      this.schema,
+      { app: this.targetAppId, query: this.query },
+      this.onSelect,
+      this.sub
+    )
   },
   methods: {
     openModal() {
@@ -127,8 +127,12 @@ export default {
       // カスタムルックアップへのフィールドコピー
       const targetField = this.targetFieldList[targetFieldId]
       this.input = record[targetField.var].value
+      // オリジナルルックアップへのフィールドコピー
+      const r = kintone.mobile.app.record.get()
+      r.record[this.fieldCode].value = record[targetField.var].value
+      kintone.mobile.app.record.set(r)
 
-      beforeSelectAction(this.lookup, record.$id.value)
+      beforeSelectAction(this, this.lookup, record.$id.value)
       const [button] = this.parent.getElementsByClassName('forms-lookup-lookup-gaia')
       button.click()
     },
