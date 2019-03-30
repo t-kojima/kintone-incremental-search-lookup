@@ -17,32 +17,23 @@ const operators = {
 }
 
 const globalState = {
-  // アクティブ（モーダルが開いてる）ルックアップ
   viewModel: null,
-  activeLookup: null,
   selectedId: null,
 }
 
-function beforeSelectAction(vm, lookup, id) {
-  const fieldList = lookup.targetApp.schema.table.fieldList
-  const fieldId = Object.values(fieldList).find(({ type }) => type === 'RECORD_ID').id
-  lookup.listFields.push(fieldId)
-  vm.isLoading = true
+function beforeSelectAction(vm, id) {
   globalState.viewModel = vm
   globalState.selectedId = id
-  globalState.activeLookup = lookup
 }
 
-function afterSelectAction(lookup) {
-  lookup.listFields.pop()
-  globalState.viewModel.isLoading = false
+function afterSelectAction(vm) {
+  vm.isLoading = false
   globalState.viewModel = null
   globalState.selectedId = null
-  globalState.activeLookup = null
 }
 
 function searchRecoedFromAllPages(dialog, fieldId) {
-  const { activeLookup: lookup, selectedId } = globalState
+  const { selectedId, viewModel } = globalState
   const records = dialog.getElementsByClassName('gaia-mobile-app-lookuplist-record')
   const record = Array.from(records).find(record => {
     const [row] = record.getElementsByClassName(`value-${fieldId}`)
@@ -50,14 +41,15 @@ function searchRecoedFromAllPages(dialog, fieldId) {
   })
   if (record) {
     simulateMouseClick(record)
-    afterSelectAction(lookup)
+    afterSelectAction(viewModel)
   } else {
+    viewModel.isLoading = true
     const [left] = dialog.getElementsByClassName('navigation-header-left')
     const button = left.getElementsByClassName('gaia-mobile-ui-barbutton')[1]
     if (button && !button.className.includes('button-disabled-gaia')) {
       simulateMouseClick(button)
     } else {
-      afterSelectAction(lookup)
+      afterSelectAction(viewModel)
     }
   }
 }
@@ -102,6 +94,11 @@ export default {
   },
   created() {
     this.input = this.value
+    // modalの表示フィールドにidを追加
+    const fieldList = this.lookup.targetApp.schema.table.fieldList
+    const fieldId = Object.values(fieldList).find(({ type }) => type === 'RECORD_ID').id
+    this.lookup.listFields.push(fieldId)
+    
     this.modal = createLookupModalViewModel(
       `${this.id}-modal`,
       this.lookup,
@@ -132,7 +129,7 @@ export default {
       r.record[this.fieldCode].value = record[targetField.var].value
       kintone.mobile.app.record.set(r)
 
-      beforeSelectAction(this, this.lookup, record.$id.value)
+      beforeSelectAction(this, record.$id.value)
       const [button] = this.parent.getElementsByClassName('forms-lookup-lookup-gaia')
       button.click()
     },

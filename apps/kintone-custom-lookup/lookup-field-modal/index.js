@@ -62,6 +62,7 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
       labelItems(record) {
         const targetFieldIds = [lookup.keyMapping.targetFieldId, ...lookup.listFields]
         const targetFields = lookup.targetApp.schema.table.fieldList
+        targetFieldIds.pop()
         return targetFieldIds.map(id => record[targetFields[id].var].value)
       },
     },
