@@ -110,7 +110,7 @@ export default {
   },
   methods: {
     openModal() {
-      this.modal.onSearch(this.input)
+      this.modal.open(this.input)
     },
     onClear() {
       this.input = ''

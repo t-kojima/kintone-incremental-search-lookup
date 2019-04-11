@@ -31,7 +31,7 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         kintoneUtility.rest
           .getRecords({ app, query: `${this.conditions} ${query} limit 100` })
           .then(({ records }) => {
-            this.records = records
+            this.records = this.extraFilter ? this.extraFilter(records) : records
             toast({
               message: `<h2>取得件数 ${this.records.length} 件</h2>`,
               type: 'is-link',
@@ -54,7 +54,7 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         callback(record)
         this.active = false
       },
-      onSearch(value) {
+      open(value) {
         const [element] = document.getElementsByClassName(this.fieldCode)
         element.dispatchEvent(
           new CustomEvent('open-modal', {
@@ -101,21 +101,6 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
             return `( ${targetFieldIds.map(id => `${targetFields[id].var} like "${word}"`).join(' or ')} )`
           })
           .join(' and ')
-      },
-      filterdRecords() {
-        const filterFromInput = records => {
-          const words = this.input
-            .replace(/　/g, ' ')
-            .split(' ')
-            .filter(_ => _)
-          return words.length
-            ? records.filter(_ => {
-                const text = this.labelItems(_).join(' ')
-                return words.every(word => text.includes(word))
-              })
-            : records
-        }
-        return this.extraFilter ? this.extraFilter(filterFromInput(this.records)) : filterFromInput(this.records)
       },
     },
     template,
