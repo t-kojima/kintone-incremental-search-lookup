@@ -9,7 +9,7 @@
           <div class="gaia-mobile-scrollablecontroller">
             <div class="gaia-mobile-app-lookuplist">
               <ul class="gaia-mobile-app-lookuplist-records">
-                <li v-for="(record, index) in filterdRecords" class="gaia-mobile-app-lookuplist-record">
+                <li v-for="(record, index) in records" class="gaia-mobile-app-lookuplist-record">
                   <div class="gaia-mobile-app-lookuplist-inner" @click="onClickItem(record)">
                     <ul class="gaia-mobile-app-lookuplist-fields">
                       <li v-for="label in labelItems(record)" class="gaia-mobile-app-lookuplist-field">
@@ -40,6 +40,18 @@
                 </div>
               </td>
               <td class="navigation-header-right">
+                <div class="gaia-mobile-ui-barbutton" @click="search">
+                    <div class="gaia-mobile-ui-barbutton-contents button-normal-style">
+                      <div class="button-bg"></div>
+                      <div class="button-label">
+                        <span class="gaia-mobile-ui-barbutton-title" style="display: none;"></span
+                        ><img
+                          class="gaia-mobile-ui-barbutton-icon"
+                          src="./images/font-awesome_4-7-0_search_24_3_6e6e6e_none.png"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 <div class="gaia-mobile-ui-barbutton" @click="close">
                   <div class="gaia-mobile-ui-barbutton-contents button-normal-style">
                     <div class="button-bg"></div>
@@ -59,7 +71,7 @@
         <div class="navigation-header-shadow"></div>
       </div>
       <div v-if="isLoading" class="navigation-footer">
-        <div class="loader"></div>
+          <div class="loader"></div>
       </div>
     </div>
     <div class="android-hack"></div>

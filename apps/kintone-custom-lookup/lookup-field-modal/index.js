@@ -1,10 +1,13 @@
 /* eslint no-irregular-whitespace: ["error", {"skipRegExps": true}] */
 import Vue from 'vue'
+import { toast } from 'bulma-toast'
 import template from './template.html'
+import bulma from '../../bulma.scss'
 import style from './style.scss'
 import loader from '../loader.css'
 import kintoneUtility from 'kintone-utility'
 
+bulma.use()
 style.use()
 loader.use()
 
@@ -17,23 +20,32 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
       input: '',
       active: false,
       extraFilter: null,
-      isLoading: true,
-    },
-    created() {
-      this.getRecords()
+      isLoading: false,
     },
     methods: {
-      getRecords(offset) {
+      getRecords() {
+        this.records = []
+        this.isLoading = true
+
         const { app, query } = params
         kintoneUtility.rest
-          .getRecords({ app, query: `${query} limit 500 offset ${offset || 0}` })
+          .getRecords({ app, query: `${this.conditions} ${query} limit 100` })
           .then(({ records }) => {
-            this.records.push(...records)
-            if (records.length) {
-              this.getRecords((offset || 0) + records.length)
-            } else {
-              this.isLoading = false
-            }
+            this.records = records
+            toast({
+              message: `<h2>取得件数 ${this.records.length} 件</h2>`,
+              type: 'is-link',
+              position: 'bottom-center',
+            })
+            this.isLoading = false
+          })
+          .catch(({ message }) => {
+            toast({
+              message: `<h2>${message}</h2>`,
+              type: 'is-danger',
+              position: 'bottom-center',
+            })
+            this.isLoading = false
           })
       },
       onClickItem(record) {
@@ -54,7 +66,11 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
           })
         )
         this.input = value
+        this.getRecords()
         this.active = true
+      },
+      search() {
+        this.getRecords()
       },
       close() {
         this.active = false
@@ -71,6 +87,20 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         const fieldId = lookup.keyMapping.fieldId
         const fieldList = sub ? schema.subTable[sub.id].fieldList : schema.table.fieldList
         return fieldList[fieldId].var
+      },
+      conditions() {
+        const words = this.input
+          .replace(/　/g, ' ')
+          .split(' ')
+          .filter(_ => _)
+        const targetFieldIds = [lookup.keyMapping.targetFieldId, ...lookup.listFields]
+        targetFieldIds.pop()
+        const targetFields = lookup.targetApp.schema.table.fieldList
+        return words
+          .map(word => {
+            return `( ${targetFieldIds.map(id => `${targetFields[id].var} like "${word}"`).join(' or ')} )`
+          })
+          .join(' and ')
       },
       filterdRecords() {
         const filterFromInput = records => {
