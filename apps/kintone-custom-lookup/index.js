@@ -27,37 +27,8 @@ kintone.events.on(['mobile.app.record.create.show', 'mobile.app.record.edit.show
       const value = event.record[field.var].value || ''
       baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, value)
     }
-    Object.values(schema.subTable).forEach(sub => {
-      const subTableField = sub.fieldList[fieldId]
-      if (baseLookups.length && subTableField && !isDisabled(subTableField)) {
-        Array.from(baseLookups).forEach((baseLookup, i) => {
-          const value = event.record[sub.var].value[i].value[subTableField.var].value || ''
-          baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, value, { id: sub.id, var: sub.var, index: i })
-        })
-      }
-    })
   })
   return event
-})
-
-// サブテーブルのレコード増減
-Object.values(schema.subTable).forEach(sub => {
-  kintone.events.on([`mobile.app.record.create.change.${sub.var}`, `mobile.app.record.edit.change.${sub.var}`], event => {
-    lookups.forEach(lookup => {
-      const {
-        keyMapping: { fieldId },
-      } = lookup
-      if (sub.fieldList[fieldId]) {
-        const baseLookups = document.getElementsByClassName(`field-${fieldId}`)
-        Array.from(baseLookups).forEach((baseLookup, i) => {
-          if (!baseLookup.vm) {
-            baseLookup.vm = createLookupViewModel(baseLookup, lookup, schema, '', { id: sub.id, var: sub.var, index: i })
-          }
-        })
-      }
-    })
-    return event
-  })
 })
 
 function createLookupViewModel(parent, lookup, schema, value, sub) {
