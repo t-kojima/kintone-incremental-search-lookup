@@ -11,6 +11,16 @@ bulma.use()
 style.use()
 loader.use()
 
+const operators = {
+  'SINGLE_LINE_TEXT': 'like',
+  'MULTI_LINE_TEXT': 'like',
+  'RICH_TEXT': 'like',
+  'SINGLE_CHECK': 'in',
+  'MULTIPLE_CHECK': 'in',
+  'SINGLE_SELECT': 'in',
+  'MULTIPLE_SELECT': 'in',
+}
+
 export function createLookupModalViewModel(id, lookup, schema, params, callback, sub) {
   document.getElementById('main').insertAdjacentHTML('beforeend', `<div id="${id}"></div>`)
   return new Vue({
@@ -19,7 +29,7 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
       records: [],
       input: '',
       active: false,
-      extraFilter: null,
+      extraQuery: '',
       isLoading: false,
     },
     methods: {
@@ -28,10 +38,11 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         this.isLoading = true
 
         const { app, query } = params
+        const queries = [this.extraQuery, this.conditions, query].filter(_ => _ && !_.startsWith('order'))
         kintoneUtility.rest
-          .getRecords({ app, query: `${this.conditions} ${query} limit 100` })
+          .getRecords({ app, query: `${queries.join(' and ')} limit 100` })
           .then(({ records }) => {
-            this.records = this.extraFilter ? this.extraFilter(records) : records
+            this.records = records
             toast({
               message: `<h2>取得件数 ${this.records.length} 件</h2>`,
               type: 'is-link',
@@ -59,9 +70,9 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         element.dispatchEvent(
           new CustomEvent('open-modal', {
             detail: {
-              setFilter: f => {
-                this.extraFilter = f
-              },
+              addQuery: q => {
+                this.extraQuery = q
+              }
             },
           })
         )
@@ -98,7 +109,14 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         const targetFields = lookup.targetApp.schema.table.fieldList
         return words
           .map(word => {
-            return `( ${targetFieldIds.map(id => `${targetFields[id].var} like "${word}"`).join(' or ')} )`
+            return `( ${targetFieldIds.map(id => {
+              const operator = operators[targetFields[id].type] || '='
+              if (operator === 'in') {
+                return `${targetFields[id].var} ${operator} ("${word}")`
+              } else {
+                return `${targetFields[id].var} ${operator} "${word}"`
+              }
+            }).join(' or ')} )`
           })
           .join(' and ')
       },

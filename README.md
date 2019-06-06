@@ -21,9 +21,9 @@ kintone.events.on('mobile.app.record.create.show', event => {
   const [element] = document.getElementsByClassName('<lookup field code>')
 
   // handle 'open-modal' event
-  element.addEventListener('open-modal', ({ detail: { setFilter } }) => {
+  element.addEventListener('open-modal', ({ detail: { addQuery } }) => {
     // can filtering target app records
-    setFilter(records => records.filter('<predicate>'))
+    addQuery('<kintone query>')
   })
 
   // handle 'select-item' event

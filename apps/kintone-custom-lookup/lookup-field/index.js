@@ -24,12 +24,14 @@ const globalState = {
 function beforeSelectAction(vm, id) {
   globalState.viewModel = vm
   globalState.selectedId = id
+  globalState.activeLookup = vm.lookup
 }
 
 function afterSelectAction(vm) {
   vm.isLoading = false
   globalState.viewModel = null
   globalState.selectedId = null
+  globalState.activeLookup = null
 }
 
 function searchRecoedFromAllPages(dialog, fieldId) {
@@ -126,7 +128,11 @@ export default {
       this.input = record[targetField.var].value
       // オリジナルルックアップへのフィールドコピー
       const r = kintone.mobile.app.record.get()
-      r.record[this.fieldCode].value = record[targetField.var].value
+      if (this.sub) {
+        r.record[this.sub.var].value[this.sub.index].value[this.fieldCode].value = record[targetField.var].value
+      } else {
+        r.record[this.fieldCode].value = record[targetField.var].value
+      }
       kintone.mobile.app.record.set(r)
 
       beforeSelectAction(this, record.$id.value)
