@@ -98,7 +98,10 @@ export function createLookupModalViewModel(id, lookup, schema, params, callback,
         const targetFields = lookup.targetApp.schema.table.fieldList
         return words
           .map(word => {
-            return `( ${targetFieldIds.map(id => `${targetFields[id].var} like "${word}"`).join(' or ')} )`
+            return `( ${targetFieldIds
+              .filter(id => targetFields[id].type === 'SINGLE_LINE_TEXT')
+              .map(id => `${targetFields[id].var} like "${word}"`)
+              .join(' or ')} )`
           })
           .join(' and ')
       },
